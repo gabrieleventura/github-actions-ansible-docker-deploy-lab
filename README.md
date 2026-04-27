@@ -28,3 +28,4 @@ The goal of this lab is to move from manual deployment to an automated CI/CD wor
 ## Live Environment
 
 https://app-lab.cervelliesplosi.com
+
