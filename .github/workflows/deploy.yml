@@ -21,10 +21,10 @@ jobs:
       - name: Configure SSH key
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/hetzner_key
+          echo "${{ secrets.HETZNER_SSH_KEY_B64 }}" | base64 -d > ~/.ssh/hetzner_key
           chmod 600 ~/.ssh/hetzner_key
           ssh-keyscan -H lab.cervelliesplosi.com >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/hetzner_key -o IdentitiesOnly=yes root@lab.cervelliesplosi.com "echo SSH connection successful"
+          ssh -i ~/.ssh/hetzner_key -o IdentitiesOnly=yes -o BatchMode=yes root@lab.cervelliesplosi.com "echo SSH connection successful"
 
       - name: Run Ansible deploy playbook
         run: |
