@@ -69,3 +69,19 @@ During implementation I diagnosed and fixed issues including:
 https://app-lab.cervelliesplosi.com
 
 ---
+
+## Screenshots
+
+### Live Application
+
+![Live App](screenshots/live-application.png)
+
+### Successful GitHub Actions Deployment
+
+![Successful Run](screenshots/github-actions-success.png)
+
+### Workflow History (Failures Resolved)
+
+![Workflow History](screenshots/workflow-history.png)
+
+---
