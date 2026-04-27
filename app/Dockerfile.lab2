@@ -1,0 +1,77 @@
+####################################
+# STAGE 1 — BUILD (minify + obfuscate)
+####################################
+
+FROM node:20 AS builder
+
+WORKDIR /app
+
+COPY site/ /app/
+
+RUN npm install -g html-minifier-terser clean-css-cli javascript-obfuscator
+
+RUN mkdir /build
+
+# copia PHP e media (no html/css/js/uploads) — senza rsync
+RUN cp -a /app/. /build/ \
+ && find /build -type f -name "*.html" -delete \
+ && find /build -type f -name "*.css" -delete \
+ && find /build -type f -name "*.js"  -delete \
+ && rm -rf /build/uploads
+
+# minifica HTML
+RUN find /app -type f -name "*.html" | while read f; do \
+  rel=${f#/app/}; \
+  mkdir -p /build/$(dirname "$rel"); \
+  html-minifier-terser \
+    --collapse-whitespace \
+    --remove-comments \
+    --remove-script-type-attributes \
+    --remove-style-link-type-attributes \
+    "$f" -o "/build/$rel"; \
+done
+
+# minifica CSS
+RUN find /app -type f -name "*.css" | while read f; do \
+  rel=${f#/app/}; \
+  mkdir -p /build/$(dirname "$rel"); \
+  cleancss "$f" -o "/build/$rel"; \
+done
+
+# offusca JS
+RUN find /app -type f -name "*.js" | while read f; do \
+  rel=${f#/app/}; \
+  mkdir -p /build/$(dirname "$rel"); \
+  name=$(basename "$f"); \
+  if echo "$name" | grep -q ".min.js"; then \
+     cp "$f" "/build/$rel"; \
+  else \
+     javascript-obfuscator "$f" \
+       --output "/build/$rel" \
+       --compact true \
+       --string-array true \
+       --string-array-encoding base64 \
+       --control-flow-flattening false \
+       --dead-code-injection false \
+       --self-defending false; \
+  fi; \
+done
+
+
+####################################
+# STAGE 2 — RUNTIME
+####################################
+
+FROM php:8.2-apache
+
+RUN apt-get update && apt-get install -y libonig-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN a2enmod rewrite headers
+RUN docker-php-ext-install mbstring mysqli pdo pdo_mysql
+
+WORKDIR /var/www/html
+
+COPY --from=builder /build/ /var/www/html/
+
+RUN chown -R www-data:www-data /var/www/html

@@ -1,0 +1,38 @@
+---
+- name: Deploy Cervelli Esplosi Docker app
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Ensure application directory exists
+      ansible.builtin.file:
+        path: /opt/cervelliesplosi
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Copy application files
+      ansible.builtin.copy:
+        src: app/
+        dest: /opt/cervelliesplosi/
+        owner: root
+        group: root
+        mode: preserve
+
+    - name: Create environment file on server
+      ansible.builtin.copy:
+        dest: /opt/cervelliesplosi/.env.lab2
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          MARIADB_ROOT_PASSWORD=rootpass
+          MARIADB_DATABASE=form_upload
+          MARIADB_USER=formuser
+          MARIADB_PASSWORD=AntCAuXRw78
+
+    - name: Start application with Docker Compose
+      ansible.builtin.command:
+        cmd: docker compose --env-file .env.lab2 -f docker-compose.lab2.yml up -d --build
+        chdir: /opt/cervelliesplosi

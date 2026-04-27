@@ -1,0 +1,27 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.lab2
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+    depends_on:
+      - db
+    # IMPORTANTISSIMO per il tuo caso: uploads persistenti sul laptop
+    volumes:
+      - ./uploads:/var/www/html/uploads
+
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    volumes:
+      - ce_db_data:/var/lib/mysql
+
+volumes:
+  ce_db_data:

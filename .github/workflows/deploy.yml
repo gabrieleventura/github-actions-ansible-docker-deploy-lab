@@ -1,0 +1,30 @@
+name: Deploy application with Ansible
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+
+      - name: Configure SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/hetzner_key
+          chmod 600 ~/.ssh/hetzner_key
+          ssh-keyscan -H lab.cervelliesplosi.com >> ~/.ssh/known_hosts
+
+      - name: Run Ansible deploy playbook
+        run: |
+          ansible-playbook -i inventory.ini deploy-app.yml --private-key ~/.ssh/hetzner_key
